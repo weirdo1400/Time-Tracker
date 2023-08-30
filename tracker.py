@@ -19,7 +19,7 @@ def calculate_time_and_store_in_list(not_existing):
 
 array = []
 date_exists = False
-file = "data.json"
+file = "C:/Coding/Time_Tracker/data.json"
 date_today = dt.date.today()
 
 try:

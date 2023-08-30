@@ -1,6 +1,7 @@
 # Ignore .txt, .json files
 *.txt
 *.json
+*.spec
 
 # Ignore folder dist and build
 build/
