@@ -10,13 +10,17 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
+import subprocess as sp
+
 global time_youtubet
 helper_array = []
 formated_data = {}
-output_file = "C:/Coding/Time_Tracker/formated_data.json"	
+output_file = "formated_data.json"	
 global data
 date = ""
-input_file = "C:/Coding/Time_Tracker/data.json"		
+input_file = "data.json"		
+global extProc
+extProc = None
 
 def get_date():
     # Grab the date
@@ -108,6 +112,7 @@ def summarize_data(formated_date, data):
     formated_data[formated_date] = helper_array
     create_json_store_data(formated_date)
     create_pie_chart()
+    update_labels()
            
 def create_json_store_data(formated_date):
     try:
@@ -140,6 +145,28 @@ def create_pie_chart():
 
     print("pie chart created")
 
+def update_labels():
+    youtube_time_label.config(text = str(time_youtube) + " sec")
+    twitch_time_label.config(text = str(time_twitch) + " sec")
+    vscode_time_label.config(text = str(time_vscode) + " sec")
+    mt5_time_label.config(text = str(time_mt5) + " sec")
+    mteditor_time_label.config(text = str(time_mt5) + " sec")
+    mteditor_time_label.config(text = str(time_mteditor) + " sec")
+    discord_time_label.config(text = str(time_discord) + " sec")
+    spotify_time_label.config(text = str(time_spotify) + " sec")
+    google_time_label.config(text = str(time_google) + " sec")
+    lol_time_label.config(text = str(time_lol) + " sec")
+    rest_time_label.config(text = str(time_rest) + " sec")
+    total_time_label.config(text= str(time_total) + " sec")
+
+def start_tracker():
+    global extProc
+    extProc = sp.Popen(['python','tracker.py']) # runs tracker.py
+    status = sp.Popen.poll(extProc) # status should be 'None'
+
+def stop_tracker():
+    sp.Popen.terminate(extProc) # closes the process
+    status = sp.Popen.poll(extProc) # status should now be something other than 'None' ('1' in my testing) 
 root = Tk()
 #root = tb.Window(themename="superhero")
 root.title("Test APP")
@@ -157,6 +184,12 @@ cal.grid(row=1,column=0)
 # Add Button and Label
 Button(root, text = "Get Date",
        command = get_date).grid(row=2, column=0)
+
+# Button to start
+Button(root, text = "Start tracker", command=start_tracker).grid(row=14, column=4)
+
+# Button to stop
+Button(root, text = "Stop tracker", command=stop_tracker).grid(row=14, column=5)
  
 my_date = Label(root, text = "")
 my_date.grid(row=3, column=0)
@@ -194,8 +227,8 @@ discord_time_label.grid(row=9, column=1)
 
 lol_label = Label(root, text="League of Legends")
 lol_label.grid(row=10, column=0)
-lol_label = Label(root, text="Time")
-lol_label.grid(row=10, column=1)
+lol_time_label = Label(root, text="Time")
+lol_time_label.grid(row=10, column=1)
 
 spotify_label = Label(root, text="Spotify Premium")
 spotify_label.grid(row=11, column=0)
@@ -211,6 +244,11 @@ rest_label = Label(root, text="Rest")
 rest_label.grid(row=13, column=0)
 rest_time_label = Label(root, text="Time")
 rest_time_label.grid(row=13, column=1)
+
+total_label = Label(root, text="Total")
+total_label.grid(row=14, column=0)
+total_time_label = Label(root, text="Time")
+total_time_label.grid(row=14, column=1)
 
 
 root.mainloop() 
