@@ -3,7 +3,21 @@ import time
 import datetime as dt
 import json 
 
-def calculate_time_and_store_in_list(not_existing):
+global array
+global date_today
+global date_exists
+global data
+global dictionary
+global time_start
+global open_window
+global json_file
+open_window = ""
+
+date_exists = False
+file = "data.json"
+date_today = dt.date.today()
+
+def calculate_time_and_store_in_list(not_existing, time_start, open_window):
 	time_end = dt.datetime.now()		
 	timedelta = (time_end - time_start).seconds
 	print(str(open_window) + " has been open for " + str(timedelta))
@@ -16,56 +30,61 @@ def calculate_time_and_store_in_list(not_existing):
 	if not_existing:
 		print("not opened yet")
 		array.insert(len(array), [open_window, timedelta])	
+		not_existing = False
+	print(array)
 
-array = []
-date_exists = False
-file = "data.json"
-date_today = dt.date.today()
+def open_json_and_load_data(file):
+	date_today = dt.date.today()
+	try:
+		with open (file, "r") as json_file:
+			data = json.load(json_file)
+			print("Existing JSON file:")
+			print(data)
+		if str(date_today) in data:
+			date_exists = True
+			array = data[str(date_today)]
+			print("date exists")
+		else:
+			array = []
+		print("File read")
+	except:
+		print("File is empty or doesnt't exist")
+		array = []
+		data = {}
 
-try:
-	with open (file, "r") as json_file:
-		data = json.load(json_file)
-		print("Existing JSON file:")
-		print(data)
+	open_window = GetWindowText(GetForegroundWindow()) 
+	print("Open window: " + open_window)
+	time_start = dt.datetime.now()
+	return time_start, array, data
 
-	if str(date_today) in data:
-		date_exists = True
-		array = data[str(date_today)]
-	print("File read")
-except:
-	print("File is empty or doesnt't exist")
+def get_current_app(open_window, time_start):
+	try:
+		while True:
+			not_existing = True
+			if open_window != GetWindowText(GetForegroundWindow()):
+				print("Not same window")			
+				calculate_time_and_store_in_list(not_existing, time_start, open_window)	
+				time_start = dt.datetime.now()
+				open_window = GetWindowText(GetForegroundWindow())
+				print("new open window")
+				print(GetWindowText(GetForegroundWindow()))
+			time.sleep(2)
+	except KeyboardInterrupt:
+		calculate_time_and_store_in_list(not_existing, time_start, open_window)
+		print("Interrupted!")
 
-open_window = GetWindowText(GetForegroundWindow()) 
-print(open_window)
-time_start = dt.datetime.now()
-
-try:
-	dictionary = {}
-	counter = 0
-	while True:
-		not_existing = True
-		if open_window != GetWindowText(GetForegroundWindow()):
-			print("doesnt exist")			
-			calculate_time_and_store_in_list(not_existing)	
-			time_start = dt.datetime.now()
-			open_window = GetWindowText(GetForegroundWindow())
-		
-			print(GetWindowText(GetForegroundWindow()))
-
-		time.sleep(2)
-except KeyboardInterrupt:
-	calculate_time_and_store_in_list(not_existing)
-	print("Interrupted!")
-
-#dictionary[str(date_today)] = array
-try:
+def safe_data(data):
 	data[str(date_today)] = array
-	json_string = json.dumps(data, indent=2)
-except:
-	dictionary[str(date_today)] = array
-	print(dictionary)
-	json_string = json.dumps(dictionary, indent=2)
+	print(data)
+	try:
+		with open (file, "w+") as output:
+			json_string = json.dumps(data, indent=2)	
+			output.write(json_string)  
+			output.close()
+	except:
+		print("Error wrtiting to file")
 
-json_file = open("data.json", "w")
-json_file.write(json_string)  
-json_file.close()
+# Run program
+time_start, array, data = open_json_and_load_data(file)
+get_current_app(open_window, time_start)
+safe_data(data)
