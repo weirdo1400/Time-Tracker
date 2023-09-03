@@ -19,7 +19,7 @@ def calculate_time_and_store_in_list(not_existing):
 
 array = []
 date_exists = False
-file = "C:/Coding/Time_Tracker/data.json"
+file = "data.json"
 date_today = dt.date.today()
 
 try:
@@ -66,6 +66,6 @@ except:
 	print(dictionary)
 	json_string = json.dumps(dictionary, indent=2)
 
-json_file = open("C:/Coding/Time_Tracker/data.json", "w")
+json_file = open("data.json", "w")
 json_file.write(json_string)  
 json_file.close()
