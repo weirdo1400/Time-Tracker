@@ -12,7 +12,9 @@ import numpy as np
 
 import subprocess as sp
 
-global time_youtubet
+import tracker
+
+global time_youtube
 helper_array = []
 formated_data = {}
 output_file = "formated_data.json"	
@@ -21,6 +23,8 @@ date = ""
 input_file = "data.json"		
 global extProc
 extProc = None
+track = tracker.Tracker()
+
 
 def get_date():
     # Grab the date
@@ -160,13 +164,16 @@ def update_labels():
     total_time_label.config(text= str(time_total) + " sec")
 
 def start_tracker():
-    global extProc
-    extProc = sp.Popen(['python','tracker.py']) # runs tracker.py
-    status = sp.Popen.poll(extProc) # status should be 'None'
+    print("start")
+    #track.running_tracker = True
+    track.run_tracker()
+    #extProc = sp.Popen(['python','tracker.py']) # runs tracker.py
+    #status = sp.Popen.poll(extProc) # status should be 'None'
 
-def stop_tracker():
-    sp.Popen.terminate(extProc) # closes the process
-    status = sp.Popen.poll(extProc) # status should now be something other than 'None' ('1' in my testing) 
+def stop_tracker(track): 
+    #track.running_tracker = False
+    print("change running_tracker to False") 
+    
 root = Tk()
 #root = tb.Window(themename="superhero")
 root.title("Test APP")
