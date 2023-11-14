@@ -11,6 +11,7 @@ import numpy as np
 import subprocess as sp
 
 import mysql.connector
+from mysql.connector.locales.eng import client_error
 
 import threading
 
@@ -27,28 +28,23 @@ db = mysql.connector.connect(
     database="timetracker"
     )
 
-mycursor = db.cursor()
+mycursor = db.cursor(buffered=True)
 
 global time_youtube
 helper_array = []
 formated_data = {}
 global data
-date = ""
 global extProc
 extProc = None
 global formatted_date
 formatted_date = ""
-#track = tracker.Tracker()
-
+global date
 
 def get_date():
     # Grab the date
-    my_date.config(text = "Selected Date is: " + cal.get_date())
-    global date
     date = cal.get_date()
-    print(date)
+    my_date.config(text = "Selected Date is: " + date)
     formatted_date = str(date + "%")
-    print(formatted_date)
     summarize_data(formatted_date)
 
 def summarize_data(formatted_date):
@@ -79,9 +75,7 @@ def summarize_data(formatted_date):
     global time_total
     time_total = 0
 
-    formatted_date1 = "%2023-11-14%"
-    print("Formatted date in function: " + formatted_date)
-    print("Formatted date1 in function: " + formatted_date1)
+    db.cmd_refresh(1)
     add_time = "SELECT SUM(time_spent) FROM Time WHERE program_name LIKE %s AND time_start LIKE %s"
     
     mycursor.execute(add_time, ("%YouTube%", formatted_date))
@@ -109,9 +103,6 @@ def summarize_data(formatted_date):
     time_mt5 = time_mt5_2 + time_mt5_1
     time_rest = time_total - time_twitch - time_youtube - time_spotify - time_lol - time_google - time_mt5 - time_mteditor - time_discord - time_vscode
 
-    
-
-
     helper_array.insert(0, ["YouTube", time_youtube])
     helper_array.insert(1, ["Twitch", time_twitch])
     helper_array.insert(2, ["Visual Studio Code", time_vscode])
@@ -124,9 +115,6 @@ def summarize_data(formatted_date):
     helper_array.insert(9, ["Rest", time_rest])
     helper_array.insert(9, ["Total", time_total])
 
-    for x in helper_array:
-        print(x)
-    #formated_data[formated_date] = helper_array
     if time_total != 0:
         create_pie_chart()
         update_labels()
@@ -168,37 +156,31 @@ def update_labels():
     total_time_label.config(text= str(time_total) + " sec")
 
 def start_tracker():
-    print("start")
-    thread1.start()
-
-    #t1.run_tracker()
-    #track.running_tracker = True
-    #track.run_tracker()
-    #extProc = sp.Popen(['python','tracker.py']) # runs tracker.py
-    #status = sp.Popen.poll(extProc) # status should be 'None'
+    t1.running_tracker = True
+    try:
+        print("start")
+        thread1.start()
+    except:
+        print("Thread is already started once")
 
 def stop_tracker(): 
     t1.running_tracker = False
-    thread1.join()
-    print("change running_tracker to False") 
+    try:
+        thread1.join()
+    except:
+        print("Thread was not started yet")
+    print("Change running_tracker to False") 
     
 root = Tk()
-#root = tb.Window(themename="superhero")
-root.title("Test APP")
+root.title("Time Tracker APP")
 root.geometry("1080x800")
-
-#open_and_read_json()
-
-#my_date = tb.DateEntry(root, bootstyle="primary", firstweekday=0)
-#my_date.pack(pady=50)
 
 # Add Calendar
 cal = Calendar(root, selectmode = 'day', date_pattern="yyyy-mm-dd")
 cal.grid(row=1,column=0)
 
 # Add Button and Label
-Button(root, text = "Get Date",
-       command = get_date).grid(row=2, column=0)
+Button(root, text = "Get Date", command = get_date).grid(row=2, column=0)
 
 # Button to start
 Button(root, text = "Start tracker", command=start_tracker).grid(row=30, column=4)
