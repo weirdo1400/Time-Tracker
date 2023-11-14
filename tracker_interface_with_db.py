@@ -12,6 +12,14 @@ import subprocess as sp
 
 import mysql.connector
 
+import threading
+
+from tracker_with_database import Tracker
+
+t1 = Tracker()
+thread1 = threading.Thread(target=t1.run_tracker)
+
+
 db = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -161,13 +169,17 @@ def update_labels():
 
 def start_tracker():
     print("start")
+    thread1.start()
+
+    #t1.run_tracker()
     #track.running_tracker = True
     #track.run_tracker()
     #extProc = sp.Popen(['python','tracker.py']) # runs tracker.py
     #status = sp.Popen.poll(extProc) # status should be 'None'
 
-def stop_tracker(track): 
-    #track.running_tracker = False
+def stop_tracker(): 
+    t1.running_tracker = False
+    thread1.join()
     print("change running_tracker to False") 
     
 root = Tk()
@@ -189,10 +201,9 @@ Button(root, text = "Get Date",
        command = get_date).grid(row=2, column=0)
 
 # Button to start
-#Button(root, text = "Start tracker", command=start_tracker).grid(row=14, column=4)
-
+Button(root, text = "Start tracker", command=start_tracker).grid(row=30, column=4)
 # Button to stop
-#Button(root, text = "Stop tracker", command=stop_tracker).grid(row=14, column=5)
+Button(root, text = "Stop tracker", command=stop_tracker).grid(row=30, column=5)
  
 my_date = Label(root, text = "")
 my_date.grid(row=3, column=0)
@@ -253,5 +264,4 @@ total_label.grid(row=14, column=0)
 total_time_label = Label(root, text="Time")
 total_time_label.grid(row=14, column=1)
 
-
-root.mainloop() 
+root.mainloop()

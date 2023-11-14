@@ -3,6 +3,7 @@ import time
 import datetime as dt
 import json 
 import mysql.connector
+import threading
 
 db = mysql.connector.connect(
     host="localhost",
@@ -27,6 +28,8 @@ global time_start
 global open_window
 global json_file
 global running_tracker
+
+#thread1 = threading.Thread(target=)
 
 class Tracker:
 	def __init__(self):
