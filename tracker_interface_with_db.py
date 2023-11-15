@@ -1,8 +1,6 @@
 from tkinter import *
 from tkcalendar import Calendar
 
-import json
-
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -12,48 +10,44 @@ import numpy as np
 
 import subprocess as sp
 
-import tracker
+import mysql.connector
+from mysql.connector.locales.eng import client_error
+
+import threading
+
+from tracker_with_database import Tracker
+
+t1 = Tracker()
+thread1 = threading.Thread(target=t1.run_tracker)
+
+
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="weirdo",
+    database="timetracker"
+    )
+
+mycursor = db.cursor(buffered=True)
 
 global time_youtube
 helper_array = []
 formated_data = {}
-output_file = "formated_data.json"	
 global data
-date = ""
-input_file = "data.json"		
 global extProc
 extProc = None
-track = tracker.Tracker()
-
+global formatted_date
+formatted_date = ""
+global date
 
 def get_date():
     # Grab the date
-    my_date.config(text = "Selected Date is: " + cal.get_date())
-    global date
     date = cal.get_date()
-    summarize_data(date, data)
+    my_date.config(text = "Selected Date is: " + date)
+    formatted_date = str(date + "%")
+    summarize_data(formatted_date)
 
-def open_and_read_json():
-    try:
-        with open (input_file, "r") as json_file:
-            global data
-            data = json.load(json_file)
-            print("Existing JSON file:")
-            print(data)
-        print("File read")
-    except:
-        print("File is empty or doesnt't exist")
-
-def check_if_date_exists(formated_date, data):
-    if formated_date in data:
-        date_exists = True
-        print("Date exists")
-        print(data[formated_date])
-        summarize_data(formated_date, data)
-    else:
-        print("Date does not exist")
-
-def summarize_data(formated_date, data):
+def summarize_data(formatted_date):
     global time_rest
     time_rest = 0
     global time_youtube
@@ -64,6 +58,10 @@ def summarize_data(formated_date, data):
     time_vscode = 0
     global time_mt5
     time_mt5 = 0
+    global time_mt5_1
+    time_mt5_1 = 0
+    global time_mt5_2
+    time_mt5_2 = 0
     global time_mteditor
     time_mteditor = 0
     global time_spotify
@@ -76,57 +74,51 @@ def summarize_data(formated_date, data):
     time_discord = 0
     global time_total
     time_total = 0
-    for entry in data[formated_date]:
-        if entry[0].find("YouTube") != -1:
-            time_youtube += entry[1]
-        elif entry[0].find("Twitch") != -1:
-            time_twitch += entry[1]
-        elif entry[0].find("Visual Studio Code") != -1:
-            time_vscode += entry[1]
-        elif entry[0].find("MetaTrader 5") != -1:
-            time_mt5 += entry[1]
-        elif entry[0].find("ICMarketsSC") != -1:
-            time_mt5 += entry[1]
-        elif entry[0].find("MetaEditor") != -1:
-            time_mteditor += entry[1]
-        elif entry[0].find("Discord") != -1:
-            time_discord += entry[1]
-        elif entry[0].find("Spotify Premium") != -1:
-            time_spotify += entry[1]
-        elif entry[0].find("League of Legends") != -1:
-            time_lol += entry[1]
-        elif entry[0].find("Google Chrome") != -1:
-            time_google += entry[1]
-        else:
-            time_rest += entry[1]
 
-        time_total += entry[1]
+    db.cmd_refresh(1)
+    add_time = "SELECT SUM(time_spent) FROM Time WHERE program_name LIKE %s AND time_start LIKE %s"
+    
+    mycursor.execute(add_time, ("%YouTube%", formatted_date))
+    time_youtube = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute(add_time, ("%Twitch%", formatted_date))
+    time_twitch = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute(add_time, ("%Visual Studio Code%", formatted_date))
+    time_vscode = float(mycursor.fetchall()[0][0] or 0)  
+    mycursor.execute(add_time, ("%ICMarketsSC%", formatted_date))
+    time_mt5_1 = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute(add_time, ("%MetaTrader 5%", formatted_date))
+    time_mt5_2 = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute(add_time, ("%MetaEditor%", formatted_date))
+    time_mteditor = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute(add_time, ("%Discord%", formatted_date))
+    time_discord = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute(add_time, ("%Spotify Premium%", formatted_date))
+    time_spotify = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute("SELECT SUM(time_spent) FROM Time WHERE program_name LIKE %s AND program_name NOT LIKE '%Twitch%' AND program_name NOT LIKE '%YouTube%' AND time_start LIKE %s", ("%\Google Chrome%", formatted_date))
+    time_google = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute(add_time, ("%\League of Legends%", formatted_date))
+    time_lol = float(mycursor.fetchall()[0][0] or 0)
+    mycursor.execute("SELECT SUM(time_spent) FROM Time WHERE time_start LIKE %s", (formatted_date, ))
+    time_total = float(mycursor.fetchall()[0][0] or 0)
+    time_mt5 = time_mt5_2 + time_mt5_1
+    time_rest = time_total - time_twitch - time_youtube - time_spotify - time_lol - time_google - time_mt5 - time_mteditor - time_discord - time_vscode
 
     helper_array.insert(0, ["YouTube", time_youtube])
     helper_array.insert(1, ["Twitch", time_twitch])
     helper_array.insert(2, ["Visual Studio Code", time_vscode])
-    helper_array.insert(3, ["MetaTrader 5", time_mt5])
+    helper_array.insert(3, ["MetaTrader 5", time_mt5_1 + time_mt5_2])
     helper_array.insert(4, ["MetaEditor", time_mteditor])
     helper_array.insert(5, ["Discord", time_discord])
     helper_array.insert(6, ["Spotify Premium", time_spotify])
     helper_array.insert(7, ["League of Legends", time_lol])
     helper_array.insert(8, ["Google Chrome", time_google])
     helper_array.insert(9, ["Rest", time_rest])
-    helper_array.insert(10, ["Total", time_total])
-    formated_data[formated_date] = helper_array
-    create_json_store_data(formated_date)
-    create_pie_chart()
-    update_labels()
-           
-def create_json_store_data(formated_date):
-    try:
-        with open (output_file, "w") as json_file:
-            json_string = json.dumps(formated_data, indent=2)
-            json_file.write(json_string)
-            json_file.close()
-    except:
-        print("File is empty or doesnt't exist")
+    helper_array.insert(9, ["Total", time_total])
 
+    if time_total != 0:
+        create_pie_chart()
+        update_labels()
+           
 def create_pie_chart():
     youtube_pie = 100 / time_total * time_youtube
     twitch_pie = 100 / time_total * time_twitch
@@ -135,7 +127,7 @@ def create_pie_chart():
     mteditor_pie= 100 / time_total * time_mteditor
     discord_pie = 100 / time_total * time_discord
     spotify_pie = 100 / time_total * time_spotify
-    google_pie = 100 / time_total * time_google
+    google_pie = 100 / time_total * time_google 
     lol_pie = 100 / time_total * time_lol
     rest_pie = 100 - youtube_pie - twitch_pie - vscode_pie - mt5_pie - mteditor_pie - discord_pie - spotify_pie - lol_pie
     pie_chart_array = np.array([youtube_pie, twitch_pie, vscode_pie, mt5_pie, mteditor_pie, discord_pie, spotify_pie, lol_pie, google_pie,  rest_pie])
@@ -164,39 +156,36 @@ def update_labels():
     total_time_label.config(text= str(time_total) + " sec")
 
 def start_tracker():
-    print("start")
-    #track.running_tracker = True
-    track.run_tracker()
-    #extProc = sp.Popen(['python','tracker.py']) # runs tracker.py
-    #status = sp.Popen.poll(extProc) # status should be 'None'
+    t1.running_tracker = True
+    try:
+        print("start")
+        thread1.start()
+    except:
+        print("Thread is already started once")
 
-def stop_tracker(track): 
-    #track.running_tracker = False
-    print("change running_tracker to False") 
+def stop_tracker(): 
+    t1.running_tracker = False
+    try:
+        thread1.join()
+    except:
+        print("Thread was not started yet")
+    print("Change running_tracker to False") 
     
 root = Tk()
-#root = tb.Window(themename="superhero")
-root.title("Test APP")
+root.title("Time Tracker APP")
 root.geometry("1080x800")
-
-open_and_read_json()
-
-#my_date = tb.DateEntry(root, bootstyle="primary", firstweekday=0)
-#my_date.pack(pady=50)
 
 # Add Calendar
 cal = Calendar(root, selectmode = 'day', date_pattern="yyyy-mm-dd")
 cal.grid(row=1,column=0)
 
 # Add Button and Label
-Button(root, text = "Get Date",
-       command = get_date).grid(row=2, column=0)
+Button(root, text = "Get Date", command = get_date).grid(row=2, column=0)
 
 # Button to start
-Button(root, text = "Start tracker", command=start_tracker).grid(row=14, column=4)
-
+Button(root, text = "Start tracker", command=start_tracker).grid(row=30, column=4)
 # Button to stop
-Button(root, text = "Stop tracker", command=stop_tracker).grid(row=14, column=5)
+Button(root, text = "Stop tracker", command=stop_tracker).grid(row=30, column=5)
  
 my_date = Label(root, text = "")
 my_date.grid(row=3, column=0)
@@ -257,5 +246,4 @@ total_label.grid(row=14, column=0)
 total_time_label = Label(root, text="Time")
 total_time_label.grid(row=14, column=1)
 
-
-root.mainloop() 
+root.mainloop()
