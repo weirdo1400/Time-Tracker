@@ -39,6 +39,10 @@ extProc = None
 global formatted_date
 formatted_date = ""
 global date
+global pie_labels
+pie_labels = []
+global pie_values
+pie_values = []
 
 def get_date():
     # Grab the date
@@ -103,23 +107,19 @@ def summarize_data(formatted_date):
     time_mt5 = time_mt5_2 + time_mt5_1
     time_rest = time_total - time_twitch - time_youtube - time_spotify - time_lol - time_google - time_mt5 - time_mteditor - time_discord - time_vscode
 
-    helper_array.insert(0, ["YouTube", time_youtube])
-    helper_array.insert(1, ["Twitch", time_twitch])
-    helper_array.insert(2, ["Visual Studio Code", time_vscode])
-    helper_array.insert(3, ["MetaTrader 5", time_mt5_1 + time_mt5_2])
-    helper_array.insert(4, ["MetaEditor", time_mteditor])
-    helper_array.insert(5, ["Discord", time_discord])
-    helper_array.insert(6, ["Spotify Premium", time_spotify])
-    helper_array.insert(7, ["League of Legends", time_lol])
-    helper_array.insert(8, ["Google Chrome", time_google])
-    helper_array.insert(9, ["Rest", time_rest])
-    helper_array.insert(9, ["Total", time_total])
-
     if time_total != 0:
+
         create_pie_chart()
         update_labels()
-           
+
+def add_labels_and_values(value, label):
+    if value != 0:
+        pie_values.append(value)
+        pie_labels.append(label)
+
 def create_pie_chart():
+    pie_labels.clear()
+    pie_values.clear()
     youtube_pie = 100 / time_total * time_youtube
     twitch_pie = 100 / time_total * time_twitch
     vscode_pie = 100 / time_total * time_vscode
@@ -129,17 +129,26 @@ def create_pie_chart():
     spotify_pie = 100 / time_total * time_spotify
     google_pie = 100 / time_total * time_google 
     lol_pie = 100 / time_total * time_lol
-    rest_pie = 100 - youtube_pie - twitch_pie - vscode_pie - mt5_pie - mteditor_pie - discord_pie - spotify_pie - lol_pie
-    pie_chart_array = np.array([youtube_pie, twitch_pie, vscode_pie, mt5_pie, mteditor_pie, discord_pie, spotify_pie, lol_pie, google_pie,  rest_pie])
-    pie_labels = ["YouTube", "Twitch", "Visual Studio Code", "MetaTrader 5", "MetaEditor", "Discord", "Spotify", "League of Legends", "Google Chrome", "Rest"]
+    rest_pie = 100 - youtube_pie - twitch_pie - vscode_pie - mt5_pie - mteditor_pie - discord_pie - spotify_pie - lol_pie - google_pie
+    add_labels_and_values(youtube_pie, "YouTube")
+    add_labels_and_values(twitch_pie, "Twitch")
+    add_labels_and_values(vscode_pie, "Visual Studio Code")
+    add_labels_and_values(youtube_pie, "MetaTrader 5")
+    add_labels_and_values(mteditor_pie, "MetaEditor")
+    add_labels_and_values(discord_pie, "Discord")
+    add_labels_and_values(spotify_pie, "Spotify")
+    add_labels_and_values(lol_pie, "League of Legends")
+    add_labels_and_values(google_pie, "Google Chrome")
+    add_labels_and_values(rest_pie, "Rest")
+
+    pie_values_np = np.array(pie_values)
     fig = Figure()
     pie_chart = fig.add_subplot()
-    pie_chart.pie(pie_chart_array, labels=pie_labels)
+    pie_chart.pie(pie_values_np)
+    pie_chart.legend(pie_labels, bbox_to_anchor=(1.02,0.5), loc="center right")
     canvas = FigureCanvasTkAgg(fig, master=root)  
     canvas.draw()
     canvas.get_tk_widget().grid(row=1, column=1, padx=20)
-
-    print("pie chart created")
 
 def update_labels():
     youtube_time_label.config(text = str(time_youtube) + " sec")
@@ -175,12 +184,13 @@ root = Tk()
 root.title("Time Tracker APP")
 root.geometry("1080x800")
 
+
 # Add Calendar
 cal = Calendar(root, selectmode = 'day', date_pattern="yyyy-mm-dd")
-cal.grid(row=1,column=0)
+cal.grid(row=0,column=0, padx=5)
 
 # Add Button and Label
-Button(root, text = "Get Date", command = get_date).grid(row=2, column=0)
+Button(root, text = "Get Date", command = get_date).grid(row=0, column=0, pady=20)
 
 # Button to start
 Button(root, text = "Start tracker", command=start_tracker).grid(row=30, column=4)
@@ -189,6 +199,19 @@ Button(root, text = "Stop tracker", command=stop_tracker).grid(row=30, column=5)
  
 my_date = Label(root, text = "")
 my_date.grid(row=3, column=0)
+
+# Set row and column weights to make the frame expand with the window
+root.grid_rowconfigure(0, weight=1)
+root.grid_rowconfigure(1, weight=1)
+root.grid_rowconfigure(2, weight=1)
+root.grid_columnconfigure(0, weight=1)
+
+def on_resize(event):
+    # Do something when the window is resized
+    pass
+
+# Bind the on_resize function to the <Configure> event of the root window
+root.bind("<Configure>", on_resize)
 
 # Create all label for time and apps
 youtube_label = Label(root, text="Youtube")
