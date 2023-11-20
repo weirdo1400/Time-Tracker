@@ -7,3 +7,6 @@ In the future you will be able to select the programms you want to track, get a 
 Another feature that I am working on is the ability to track the amount of spent on specific projects.
 All of the data is stored in a local MySQL database, so you will have to setup this database the first time you use this application.
 To allow python to track the open application as well as showing the interface, I used threading.
+
+## User interface
+![UI Image](Tracker_UI.jpg)
