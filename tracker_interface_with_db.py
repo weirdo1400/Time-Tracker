@@ -1,4 +1,6 @@
+import tkinter as tk
 from tkinter import *
+import tkinter.font as tkFont
 from tkcalendar import Calendar
 
 import matplotlib
@@ -43,6 +45,8 @@ global pie_labels
 pie_labels = []
 global pie_values
 pie_values = []
+
+
 
 def get_date():
     # Grab the date
@@ -145,10 +149,10 @@ def create_pie_chart():
     fig = Figure()
     pie_chart = fig.add_subplot()
     pie_chart.pie(pie_values_np)
-    pie_chart.legend(pie_labels, bbox_to_anchor=(1.02,0.5), loc="center right")
+    pie_chart.legend(pie_labels, bbox_to_anchor=(1.3,0.5), loc="center right")
     canvas = FigureCanvasTkAgg(fig, master=root)  
     canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=1, padx=20)
+    canvas.get_tk_widget().place(x=380, y=80)
 
 def update_labels():
     youtube_time_label.config(text = str(time_youtube) + " sec")
@@ -184,27 +188,31 @@ root = Tk()
 root.title("Time Tracker APP")
 root.geometry("1080x800")
 
+# Create a font
+normalfont = tkFont.Font(family="Verdana",size=12,weight="normal")
+boldfont = tkFont.Font(family="Verdana",size=12,weight="bold")
+smallfont = tkFont.Font(family="Verdana",size=8,weight="normal")
 
 # Add Calendar
 cal = Calendar(root, selectmode = 'day', date_pattern="yyyy-mm-dd")
-cal.grid(row=0,column=0, padx=5)
+cal.place(x=10, y=10)
 
 # Add Button and Label
-Button(root, text = "Get Date", command = get_date).grid(row=0, column=0, pady=20)
+Button(root, text = "Get Date", command = get_date, font=normalfont).place(x=75, y=230)
 
 # Button to start
-Button(root, text = "Start tracker", command=start_tracker).grid(row=30, column=4)
+Button(root, text = "Start tracker", command=start_tracker, font=normalfont, bg='green').place(x=750, y=750)
 # Button to stop
-Button(root, text = "Stop tracker", command=stop_tracker).grid(row=30, column=5)
+Button(root, text = "Stop tracker", command=stop_tracker, font=normalfont, bg='red').place(x=900, y=750)
  
-my_date = Label(root, text = "")
-my_date.grid(row=3, column=0)
+my_date = Label(root, text = "", font=normalfont)
+my_date.place(x=15, y=200)
 
 # Set row and column weights to make the frame expand with the window
-root.grid_rowconfigure(0, weight=1)
+"""root.grid_rowconfigure(0, weight=1)
 root.grid_rowconfigure(1, weight=1)
 root.grid_rowconfigure(2, weight=1)
-root.grid_columnconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)"""
 
 def on_resize(event):
     # Do something when the window is resized
@@ -214,59 +222,59 @@ def on_resize(event):
 root.bind("<Configure>", on_resize)
 
 # Create all label for time and apps
-youtube_label = Label(root, text="Youtube")
-youtube_label.grid(row=4, column=0)
-youtube_time_label = Label(root, text="Time")
-youtube_time_label.grid(row=4, column=1)
+youtube_label = Label(root, text="Youtube", font=normalfont)
+youtube_label.place(x=30, y=300)
+youtube_time_label = Label(root, text="Time", font=normalfont)
+youtube_time_label.place(x=220, y=300)
 
-twitch_label = Label(root, text="Twitch")
-twitch_label.grid(row=5, column=0)
-twitch_time_label = Label(root, text="Time")
-twitch_time_label.grid(row=5, column=1)
+twitch_label = Label(root, text="Twitch", font=normalfont)
+twitch_label.place(x=30, y=330)
+twitch_time_label = Label(root, text="Time", font=normalfont)
+twitch_time_label.place(x=220, y=330)
 
-vscode_label = Label(root, text="VS Code")
-vscode_label.grid(row=6, column=0)
-vscode_time_label = Label(root, text="Time")
-vscode_time_label.grid(row=6, column=1)
+vscode_label = Label(root, text="VS Code", font=normalfont)
+vscode_label.place(x=30, y=360)
+vscode_time_label = Label(root, text="Time", font=normalfont)
+vscode_time_label.place(x=220, y=360)
 
-mt5_label = Label(root, text="MetaTrader 5")
-mt5_label.grid(row=7, column=0)
-mt5_time_label = Label(root, text="Time")
-mt5_time_label.grid(row=7, column=1)
+mt5_label = Label(root, text="MetaTrader 5", font=normalfont)
+mt5_label.place(x=30, y=390)
+mt5_time_label = Label(root, text="Time", font=normalfont)
+mt5_time_label.place(x=220, y=390)
 
-mteditor_label = Label(root, text="MetaEditor")
-mteditor_label.grid(row=8, column=0)
-mteditor_time_label = Label(root, text="Time")
-mteditor_time_label.grid(row=8, column=1)
+mteditor_label = Label(root, text="MetaEditor", font=normalfont)
+mteditor_label.place(x=30, y=420)
+mteditor_time_label = Label(root, text="Time", font=normalfont)
+mteditor_time_label.place(x=220, y=420)
 
-discord_label = Label(root, text="Discord")
-discord_label.grid(row=9, column=0)
-discord_time_label = Label(root, text="Time")
-discord_time_label.grid(row=9, column=1)
+discord_label = Label(root, text="Discord", font=normalfont)
+discord_label.place(x=30, y=450)
+discord_time_label = Label(root, text="Time", font=normalfont)
+discord_time_label.place(x=220, y=450)
 
-lol_label = Label(root, text="League of Legends")
-lol_label.grid(row=10, column=0)
-lol_time_label = Label(root, text="Time")
-lol_time_label.grid(row=10, column=1)
+lol_label = Label(root, text="League of Legends", font=normalfont)
+lol_label.place(x=30, y=480)
+lol_time_label = Label(root, text="Time", font=normalfont)
+lol_time_label.place(x=220, y=480)
 
-spotify_label = Label(root, text="Spotify Premium")
-spotify_label.grid(row=11, column=0)
-spotify_time_label = Label(root, text="Time")
-spotify_time_label.grid(row=11, column=1)
+spotify_label = Label(root, text="Spotify Premium", font=normalfont)
+spotify_label.place(x=30, y=510)
+spotify_time_label = Label(root, text="Time", font=normalfont)
+spotify_time_label.place(x=220, y=510)
 
-google_label = Label(root, text="Google Chrome")
-google_label.grid(row=12, column=0)
-google_time_label = Label(root, text="Time")
-google_time_label.grid(row=12, column=1)
+google_label = Label(root, text="Google Chrome", font=normalfont)
+google_label.place(x=30, y=540)
+google_time_label = Label(root, text="Time", font=normalfont)
+google_time_label.place(x=220, y=540)
 
-rest_label = Label(root, text="Rest")
-rest_label.grid(row=13, column=0)
-rest_time_label = Label(root, text="Time")
-rest_time_label.grid(row=13, column=1)
+rest_label = Label(root, text="Rest", font=normalfont)
+rest_label.place(x=30, y=570)
+rest_time_label = Label(root, text="Time", font=normalfont)
+rest_time_label.place(x=220, y=570)
 
-total_label = Label(root, text="Total")
-total_label.grid(row=14, column=0)
-total_time_label = Label(root, text="Time")
-total_time_label.grid(row=14, column=1)
+total_label = Label(root, text="Total", font=boldfont)
+total_label.place(x=30, y=600)
+total_time_label = Label(root, text="Time", font=boldfont)
+total_time_label.place(x=220, y=600)
 
 root.mainloop()
