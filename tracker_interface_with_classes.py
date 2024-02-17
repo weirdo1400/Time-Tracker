@@ -12,14 +12,24 @@ class App(ctk.CTk):
         super().__init__()
 
         self.title("Time Tracker")
-        self.geometry("1080x800")
+
+        self.app_width = 1080
+        self.app_height = 800
+
+        self.screen_width = self.winfo_screenwidth()
+        self.screen_height = self.winfo_screenheight()
+
+        self.x = (self.screen_width / 2) - (self.app_width / 2)
+        self.y = (self.screen_height / 2) - (self.app_height / 2)
+        
+        self.geometry(f'{self.app_width}x{self.app_height}+{int(self.x)}+{int(self.y)}')
         self.resizable(False, False)
 
-        self.side_menu_frame = SideMenuFrame(self, width=200, height=1000)
+        self.side_menu_frame = SideMenuFrame(self, width=200, height=self.app_height)
         self.side_menu_frame.place(x=0, y=0)
 
-        self.calendar_frame = CalendarFrame(self, width=600, height=500)
-        self.calendar_frame.place(x=100, y=0)
+        self.calendar_frame = CalendarFrame(self, width=300, height=self.app_height)
+        self.calendar_frame.place(x=205, y=0)
 
     def stop_threads(self):
         if self.thread_1 and self.thread_1.is_alive():
@@ -31,7 +41,7 @@ class App(ctk.CTk):
 
 class SideMenuFrame(ctk.CTkFrame):
     def __init__(self, master, width, height):
-        super().__init__(master, width=width, height=height)
+        super().__init__(master, width=width, height=height, corner_radius=0, fg_color="red")
 
         self.start_button = ctk.CTkButton(self, text="START", command=self.start_button_callback)
         self.start_button.place(x=0, y=0)
@@ -62,17 +72,20 @@ class SideMenuFrame(ctk.CTkFrame):
 
 class CalendarFrame(ctk.CTkFrame):
     def __init__(self, master, width, height):
-        super().__init__(master, width=width, height=height)
+        super().__init__(master, width=width, height=height, corner_radius=0, fg_color="red")
 
-        self.cal = Calendar(self, selectmode = 'day', date_pattern="yyyy-mm-dd")
-        self.cal.place(x=0, y=0)
+        self.cal = Calendar(self, selectmode = 'day', date_pattern="yyyy-mm-dd", foreground="green")
+        self.cal.place(x=5, y=5)
+
+        self.get_date_button = ctk.CTkButton(self, text="Get Date", command=self.get_date)
+        self.get_date_button.place(x=0, y=200)
 
         self.my_date = ctk.CTkLabel(self, text = "")
-        self.my_date.place(x=100, y=0)
+        self.my_date.place(x=50, y=700)
 
     def get_date(self):
         # Grab the date
-        self.my_date.config(text = "Selected Date is: " + self.cal.get_date())
+        self.my_date.configure(text = "Selected Date is: " + self.cal.get_date())
         global date
         date = self.cal.get_date()
 
