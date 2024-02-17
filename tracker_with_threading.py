@@ -2,6 +2,7 @@ from win32gui import GetWindowText, GetForegroundWindow
 import time
 import datetime as dt
 import json 
+import threading
 
 #global array
 global date_today
@@ -61,30 +62,35 @@ class Tracker:
 			data = {}
 
 		open_window = GetWindowText(GetForegroundWindow()) 
-		print("Open window: " + open_window)
+		#print("Open window: " + open_window)
 		time_start = dt.datetime.now()
-		return time_start, array, data
+		return time_start, array, data, open_window
 
-	def get_current_app(self, open_window, time_start):
-		try:
-			while self.running_tracker:
-				not_existing = True
-				if open_window != GetWindowText(GetForegroundWindow()):
-					print("Not same window")			
-					self.calculate_time_and_store_in_list(not_existing, time_start, open_window)	
-					time_start = dt.datetime.now()
-					open_window = GetWindowText(GetForegroundWindow())
-					print("new open window")
-					print(GetWindowText(GetForegroundWindow()))
-				time.sleep(2)
-		except KeyboardInterrupt:
-			self.calculate_time_and_store_in_list(not_existing, time_start, open_window)
+	def get_current_app(self):
+		#print("here")
+		self.time_start, self.array, self.data, self.open_window = self.open_json_and_load_data(self.file)
+		
+		while self.running_tracker:
+			print("running trakcer: " + str(self.running_tracker))
+			not_existing = True
+			if self.open_window != GetWindowText(GetForegroundWindow()):
+				#print("Not same window")			
+				self.calculate_time_and_store_in_list(not_existing, self.time_start, self.open_window)	
+				self.time_start = dt.datetime.now()
+				self.open_window = GetWindowText(GetForegroundWindow())
+				#print("new open window")
+				print(GetWindowText(GetForegroundWindow()))
+			time.sleep(2)
+		if not self.running_tracker:
+			self.calculate_time_and_store_in_list(not_existing, self.time_start, self.open_window)
 			self.safe_data(self.data)
 			print("Interrupted!")
 
+
+
 	def safe_data(self, data):
 		data[str(self.date_today)] = self.array
-		print(data)
+		#print(data)
 		try:
 			with open (self.file, "w+") as output:
 				json_string = json.dumps(data, indent=2)	
@@ -93,14 +99,16 @@ class Tracker:
 		except:
 			print("Error wrtiting to file")
 	
-	def run_tracker(self):
-		#self.time_start, self.array, self.data = self.open_json_and_load_data(self.file)
+	"""def run_tracker(self):
+		self.time_start, self.array, self.data = self.open_json_and_load_data(self.file)
 		self.get_current_app(self.open_window, self.time_start)
-		#self.safe_data(self.data)
+		self.safe_data(self.data)"""
 
 	def stop(self):
 		self.running_tracker = False
 		print("stopped tracker in tracker.py")
+		
+
 
 
 # Run program
@@ -110,5 +118,6 @@ class Tracker:
 #safe_data(data)
 
 if __name__  == "__main__":
+	stop_flag = threading.Event()
 	track = Tracker()
-	track.run_tracker()
+	track.get_current_app()
