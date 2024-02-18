@@ -9,4 +9,4 @@ All of the data is stored in a local MySQL database, so you will have to setup t
 To allow python to track the open application as well as showing the interface, I used threading.
 
 ## User interface
-![UI Image](Tracker_UI_v2.jpg)
+![UI Image](images/Tracker_UI_v2.JPG)
