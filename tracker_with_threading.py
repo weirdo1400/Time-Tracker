@@ -35,10 +35,10 @@ class Tracker:
 			if open_window == p[0]:
 				p[1] += timedelta
 				not_existing = False
-				print("already opened")
+				#print("already opened")
 				pass	
 		if not_existing:
-			print("not opened yet")
+			#print("not opened yet")
 			self.array.insert(len(self.array), [open_window, timedelta])	
 			not_existing = False
 		#print("calculate_time_and_store_in_list()")
@@ -50,15 +50,15 @@ class Tracker:
 			with open (file, "r") as json_file:
 				data = json.load(json_file)
 				print("Existing JSON file:")
-				#print(data)
+				print(data)
 			if str(date_today) in data:
 				date_exists = True
 				self.array = data[str(date_today)]
-				#print("date exists")
+				print("date exists")
 			else:
 				self.array = []
-				#print("date doesnt exist")
-			#print("File read")
+				print("date doesnt exist")
+			print("File read")
 		except:
 			#print("File is empty or doesnt't exist")
 			self.array = []
@@ -87,30 +87,28 @@ class Tracker:
 		if not self.running_tracker:
 			self.calculate_time_and_store_in_list(not_existing, self.time_start, self.open_window)
 			self.safe_data(self.data)
-			print("Interrupted!")
+			
+			#print("Interrupted!")
 
 
 
 	def safe_data(self, data):
 		data[str(self.date_today)] = self.array
-		print("safe it")
-		print(data[str(self.date_today)])
+		#print("safe it")
+		#print(data[str(self.date_today)])
 		try:
 			with open (self.file, "w+") as output:
 				json_string = json.dumps(data, indent=2)	
 				output.write(json_string)  
 				output.close()
-				print("file written")
+				#print("file written")
 		except:
-			print("Error wrtiting to file")
-	
-	"""def run_tracker(self):
-		self.time_start, self.array, self.data = self.open_json_and_load_data(self.file)
-		self.get_current_app(self.open_window, self.time_start)
-		self.safe_data(self.data)"""
+			#print("Error wrtiting to file")
+			pass
 
 	def stop(self):
 		self.running_tracker = False
+		
 		print("stopped tracker in tracker.py")
 		
 

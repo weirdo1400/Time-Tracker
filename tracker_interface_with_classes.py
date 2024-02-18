@@ -65,24 +65,31 @@ class App(ctk.CTk):
 
     def stop_threads(self):
         global thread_1, t
+    
         if thread_1 and thread_1.is_alive():
             t.stop()
             thread_1.join(timeout=3)
-            print("Joined thread")
+            print("Joined thread hlo")
         else:
             print("Thread was not opened yet")
+        
 
 class SideMenuFrame(ctk.CTkFrame):
     def __init__(self, master, width, height):
         super().__init__(master, width=width, height=height, corner_radius=0, fg_color="#fbd1a2")
         global thread_1, t
 
+        self.tracker_running = False
+
         self.title_font = ctk.CTkFont(family='Helvetica', size=20, weight='bold')
 
         self.start_button = ctk.CTkButton(self, text="START", command=self.start_button_callback, fg_color="#7dcfb6", width=160, height=40, font=self.title_font, text_color="#ffffff")
-        self.start_button.place(x=(width/2), y=700, anchor=ctk.CENTER)
+        self.start_button.place(x=(width/2), y=650, anchor=ctk.CENTER)
         self.stop_button = ctk.CTkButton(self, text="STOP", command=self.stop_button_callback, fg_color="#f96d6d", width=160, height=40, font=self.title_font, text_color="#ffffff")
-        self.stop_button.place(x=(width/2), y=750, anchor=ctk.CENTER)
+        self.stop_button.place(x=(width/2), y=700, anchor=ctk.CENTER)
+
+        self.running_label = ctk.CTkLabel(self, text=f'Tracker inactive', text_color='#ff4343', font=self.title_font)
+        self.running_label.place(x=(width/2), y=750, anchor=ctk.CENTER)
 
     def start_button_callback(self):
         global thread_1
@@ -91,9 +98,11 @@ class SideMenuFrame(ctk.CTkFrame):
             thread_1 = threading.Thread(target=self.start_tracker, daemon=True)
             thread_1.start()
             print("thread started")
-
+            self.tracker_running = True
+            
         except:
             print("thread already open")
+        self.update_status_label()
  
     def start_tracker(self):
         global t
@@ -101,13 +110,22 @@ class SideMenuFrame(ctk.CTkFrame):
         t.get_current_app()
 
     def stop_button_callback(self):
-        global thread_1, t
+        global thread_1, t, data
         if thread_1 and thread_1.is_alive():
             t.stop()
             thread_1.join(timeout=3)
-            print("Joined thread")
+            self.a, self.b, data, self.c = t.open_json_and_load_data(input_file)
+            print("Joined thread hellow")
+            self.tracker_running = False
         else:
             print("Thread was not opened yet")
+        self.update_status_label()
+
+    def update_status_label(self):
+        if self.tracker_running:
+            self.running_label.configure(text='Tracker is active', text_color='#3DAC9C')
+        else:
+            self.running_label.configure(text='Tracker is inactive', text_color='#ff4343')
     
 class OverviewFrame(ctk.CTkFrame):
     def __init__(self, master, width, height):
@@ -232,12 +250,14 @@ class OverviewFrame(ctk.CTkFrame):
         
         global date, t, thread_1
         date = self.cal.get_date()
+
         
         #t.calculate_time_and_store_in_list(t.not_existing, self.time_start, t.open_window)
         #t.safe_data(data=data)
-        try:
+        """        try:
             if thread_1 and thread_1.is_alive():
                 print("THREAD")
+                t.open_json_and_load_data(input_file)
                 t.calculate_time_and_store_in_list(t.not_existing, t.time_start, t.open_window)
                 t.safe_data(data)
             else:
@@ -245,10 +265,12 @@ class OverviewFrame(ctk.CTkFrame):
                 t.open_json_and_load_data(input_file)
                 t.calculate_time_and_store_in_list(t.not_existing, t.time_start, t.open_window)
                 t.safe_data(data)
+            print(data)
         except:
             print("smash or pass")
+            print(data)
             pass
-        #
+        #"""
 
         self.summarize_data(date, data)
 
