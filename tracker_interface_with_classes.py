@@ -3,7 +3,9 @@ import tkinter as tk
 from tkcalendar import Calendar
 import threading
 import atexit
+from datetime import timedelta
 
+tk.messagebox
 import json
 
 
@@ -13,8 +15,6 @@ from matplotlib.figure import Figure
 import numpy as np
 
 from tracker_with_threading import Tracker
-t = Tracker()
-thread_1 = threading.Thread(target=t)
 
 global time_youtube
 helper_array = []
@@ -26,12 +26,12 @@ input_file = "data.json"
 global extProc
 extProc = None
 
+
 class App(ctk.CTk):
     def __init__(self):
-        super().__init__()
-
-
+        super().__init__(fg_color="#D3D3D3")
         self.title("Time Tracker")
+        global thread_1, t
 
         self.app_width = 1080
         self.app_height = 800
@@ -48,13 +48,12 @@ class App(ctk.CTk):
         self.side_menu_frame = SideMenuFrame(self, width=200, height=self.app_height)
         self.side_menu_frame.place(x=0, y=0)
 
-        self.calendar_frame = CalendarFrame(self, width=300, height=300)
-        self.calendar_frame.place(x=210, y=10)
-
-        self.plot_frame = PlotFrame(self, width=550, height=self.app_height-20)
-        self.plot_frame.place(x=520, y=10)
+        self.calendar_frame = OverviewFrame(self, width=855, height=self.app_height-20)
+        self.calendar_frame.place(x=212, y=10)
 
         self.open_and_read_json()
+
+        atexit.register(self.stop_threads)
 
     def open_and_read_json(self):
         try:
@@ -68,9 +67,10 @@ class App(ctk.CTk):
             print("File is empty or doesnt't exist")
 
     def stop_threads(self):
-        if self.thread_1 and self.thread_1.is_alive():
-            self.t.stop()
-            self.thread_1.join(timeout=3)
+        global thread_1, t
+        if thread_1.is_alive():
+            t.stop()
+            thread_1.join(timeout=3)
             print("Joined thread")
         else:
             print("Thread was not opened yet")
@@ -78,6 +78,7 @@ class App(ctk.CTk):
 class SideMenuFrame(ctk.CTkFrame):
     def __init__(self, master, width, height):
         super().__init__(master, width=width, height=height, corner_radius=0, fg_color="#fbd1a2")
+        global thread_1, t
 
         self.start_button = ctk.CTkButton(self, text="START", command=self.start_button_callback, fg_color="#7dcfb6", width=160, height=40)
         self.start_button.place(x=(width/2), y=700, anchor=ctk.CENTER)
@@ -85,125 +86,153 @@ class SideMenuFrame(ctk.CTkFrame):
         self.stop_button.place(x=(width/2), y=750, anchor=ctk.CENTER)
 
     def start_button_callback(self):
+        global thread_1
         print("start_button pressed")
         try:
-            self.thread_1 = threading.Thread(target=self.start_tracker)
-            self.thread_1.start()
+            thread_1 = threading.Thread(target=self.start_tracker, daemon=True)
+            thread_1.start()
             print("thread started")
 
         except:
             print("thread already open")
  
     def start_tracker(self):
-        self.t = Tracker()
-        self.t.get_current_app()
+        global t
+        t = Tracker()
+        t.get_current_app()
 
     def stop_button_callback(self):
-        if self.thread_1 and self.thread_1.is_alive():
-            self.t.stop()
-            self.thread_1.join(timeout=3)
+        global thread_1, t
+        if thread_1.is_alive():
+            t.stop()
+            thread_1.join(timeout=3)
             print("Joined thread")
         else:
             print("Thread was not opened yet")
-
-class CalendarFrame(ctk.CTkFrame):
+    
+class OverviewFrame(ctk.CTkFrame):
     def __init__(self, master, width, height):
-        super().__init__(master, width=width, height=height, corner_radius=10, fg_color="#fbd1a2")
+        super().__init__(master, width=width, height=height, corner_radius=10, fg_color="#ffffff")
+
+        self.colors = ['#f79256', '#fbd1a2', '#1d4e89', '#00b2ca', '#7dcfb6', '#DE576E', '#EDB1B0', '#7A71C9', '#831691', '#ACDE57']
+
+        self.table_font = ctk.CTkFont(family='Helvetica', size=15, weight='bold')
 
         self.cal = Calendar(self, selectmode = 'day', date_pattern="yyyy-mm-dd", selectbackground="#fbd1a2")
-        self.cal.place(x=(width/2), y=100, anchor=ctk.CENTER)
+        self.cal.place(x=150, y=115, anchor=ctk.CENTER)
 
         self.get_date_button = ctk.CTkButton(self, text="Select Date", command=self.get_date, width=160, height=40, fg_color="#7dcfb6")
-        self.get_date_button.place(x=(width/2), y=250, anchor=ctk.CENTER)
+        self.get_date_button.place(x=150, y=245, anchor=ctk.CENTER)
 
-        self.my_date = ctk.CTkLabel(self, text = "")
-        self.my_date.place(x=50, y=700)
+        self.my_date = ctk.CTkLabel(self, text = "", font=self.table_font)
+        self.my_date.place(x=560, y=30, anchor=ctk.CENTER)
+
+        
+
+        self.create_lables()
+
+
+    def create_lables(self):
+        self.x_base = 360
+        self.x_dist = 100
+        self.row_n = 1
+        self.base_row = 420
+        self.row_dist = 25
+        self.color_1 = "#7dcfb6"
+        self.color_2 = "#00b2ca"
+        self.height = 30
+        self.width = 300
+        self.color_index = 0
+        self.time_padx = 5
+        self.program_padx = 5
+        # Create all label for time and apps
+        self.program_title = ctk.CTkLabel(self, text="Programm", height=self.height, width=self.width, fg_color="#216760", text_color="#ffffff", anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.program_title.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.time_title = ctk.CTkLabel(self, text="Time", height=self.height, width=self.width, fg_color="#216760", text_color="#ffffff", anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.time_title.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+
+        self.youtube_label = ctk.CTkLabel(self, text="Youtube", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.youtube_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.youtube_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.youtube_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.twitch_label = ctk.CTkLabel(self, text="Twitch", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.twitch_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.twitch_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.twitch_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.vscode_label = ctk.CTkLabel(self, text="VS Code", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.vscode_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.vscode_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.vscode_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.mt5_label = ctk.CTkLabel(self, text="MetaTrader 5", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.mt5_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.mt5_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.mt5_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+        
+        self.mteditor_label = ctk.CTkLabel(self, text="MetaEditor", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.mteditor_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.mteditor_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.mteditor_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.discord_label = ctk.CTkLabel(self, text="Discord", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.discord_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.discord_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.discord_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.lol_label = ctk.CTkLabel(self, text="League of Legends", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.lol_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.lol_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.lol_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.spotify_label = ctk.CTkLabel(self, text="Spotify", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.spotify_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.spotify_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.spotify_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.google_label = ctk.CTkLabel(self, text="Google", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.google_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.google_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.google_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.rest_label = ctk.CTkLabel(self, text="Rest", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.rest_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.rest_time_label = ctk.CTkLabel(self, text="", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.rest_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.row_n += 1
+        self.color_index += 1
+
+        self.total_label = ctk.CTkLabel(self, text="Total", height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
+        self.total_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
+        self.total_time_label = ctk.CTkLabel(self, text="", height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
+        self.total_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
 
     def get_date(self):
         # Grab the date
-        self.my_date.configure(text = "Selected Date is: " + self.cal.get_date())
+        self.my_date.configure(text = self.cal.get_date())
         global date
         date = self.cal.get_date()
-        print("hget date")
-        plot = PlotFrame(self, width=0, height=0)
-        plot.summarize_data(date, data)
-        #plot.summarize_data(date, data)
-
-class PlotFrame(ctk.CTkFrame):
-    def __init__(self, master, width, height):
-        super().__init__(master, width=width, height=height, corner_radius=10)
-
-        self.create_labels()
-        
-
-
-        #fig = Figure(figsize=(5, 4), dpi=100)
-        #t = np.arange(0, 3, .01)
-        #fig.add_subplot(111).plot(t, 2 * np.sin(2 * np.pi * t))
-
-        #canvas = FigureCanvasTkAgg(fig, master=self)
-        #canvas.draw()
-        #canvas.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=1)
-        #self.update()
-
-    def create_labels(self):
-        self.x_dist = 5
-        # Create all label for time and apps
-        self.youtube_label = ctk.CTkLabel(self, text="Youtube")
-        self.youtube_label.place(x=self.x_dist, y=450)
-        self.youtube_time_label = ctk.CTkLabel(self, text="Time")
-        self.youtube_time_label.place(x=200, y=450)
-
-        self.twitch_label = ctk.CTkLabel(self, text="Twitch", fg_color="blue")
-        self.twitch_label.place(x=self.x_dist, y=475)
-        self.twitch_time_label = ctk.CTkLabel(self, text="Time")
-        self.twitch_time_label.place(x=200, y=475)
-
-        self.vscode_label = ctk.CTkLabel(self, text="VS Code")
-        self.vscode_label.place(x=self.x_dist, y=500)
-        self.vscode_time_label = ctk.CTkLabel(self, text="Time")
-        self.vscode_time_label.place(x=100, y=500)
-
-        self.mt5_label = ctk.CTkLabel(self, text="MetaTrader 5")
-        self.mt5_label.place(x=self.x_dist, y=525)
-        self.mt5_time_label = ctk.CTkLabel(self, text="Time")
-        self.mt5_time_label.place(x=100, y=525)
-
-        self.mteditor_label = ctk.CTkLabel(self, text="MetaEditor")
-        self.mteditor_label.place(x=self.x_dist, y=550)
-        self.mteditor_time_label = ctk.CTkLabel(self, text="Time")
-        self.mteditor_time_label.place(x=100, y=550)
-
-        self.discord_label = ctk.CTkLabel(self, text="Discord")
-        self.discord_label.place(x=self.x_dist, y=575)
-        self.discord_time_label = ctk.CTkLabel(self, text="Time")
-        self.discord_time_label.place(x=100, y=575)
-
-        self.lol_label = ctk.CTkLabel(self, text="League of Legends")
-        self.lol_label.place(x=self.x_dist, y=600)
-        self.lol_time_label = ctk.CTkLabel(self, text="Time")
-        self.lol_time_label.place(x=100, y=600)
-
-        self.spotify_label = ctk.CTkLabel(self, text="Spotify")
-        self.spotify_label.place(x=self.x_dist, y=625)
-        self.spotify_time_label = ctk.CTkLabel(self, text="Time")
-        self.spotify_time_label.place(x=100, y=625)
-
-        self.google_label = ctk.CTkLabel(self, text="Google Chrome")
-        self.google_label.place(x=self.x_dist, y=650)
-        self.google_time_label = ctk.CTkLabel(self, text="Time")
-        self.google_time_label.place(x=100, y=650)
-
-        self.rest_label = ctk.CTkLabel(self, text="Rest")
-        self.rest_label.place(x=self.x_dist, y=675)
-        self.rest_time_label = ctk.CTkLabel(self, text="Time")
-        self.rest_time_label.place(x=100, y=675)
-
-        self.total_label = ctk.CTkLabel(self, text="Total")
-        self.total_label.place(x=self.x_dist, y=700)
-        self.total_time_label = ctk.CTkLabel(self, text="Time")
-        self.total_time_label.place(x=100, y=700)
-
+        self.summarize_data(date, data)
 
     def open_and_read_json(self):
         try:
@@ -277,7 +306,6 @@ class PlotFrame(ctk.CTkFrame):
         helper_array.insert(9, ["Rest", time_rest])
         helper_array.insert(10, ["Total", time_total])
         formated_data[formated_date] = helper_array
-        #self.create_labels()
         self.create_json_store_data(formated_date)
         self.create_pie_chart()
         self.update_labels()
@@ -305,23 +333,23 @@ class PlotFrame(ctk.CTkFrame):
         self.pie_chart_array = np.array([self.youtube_pie, self.twitch_pie, self.vscode_pie, self.mt5_pie, self.mteditor_pie, self.discord_pie, self.spotify_pie, self.lol_pie, self.google_pie,  self.rest_pie])
         self.pie_labels = ["YouTube", "Twitch", "Visual Studio Code", "MetaTrader 5", "MetaEditor", "Discord", "Spotify", "League of Legends", "Google Chrome", "Rest"]
         
-        self.updated_pie_labels, self.updated_pie_chart_array = self.check_if_program_was_used(self.pie_chart_array, self.pie_labels)
+        self.updated_pie_labels, self.updated_pie_chart_array, self.updated_colors = self.check_if_program_was_used(self.pie_chart_array, self.pie_labels, self.colors)
         
-        self.fig = Figure(figsize=(4, 4), dpi=100)
+        self.fig = Figure(figsize=(3.1, 3.1), dpi=120, layout='constrained')
         
-        self.fig.add_subplot(111).pie(x=self.updated_pie_chart_array, labels=self.updated_pie_labels)
+        
+        self.fig.add_subplot(111).pie(x=self.updated_pie_chart_array, colors=self.colors, autopct='%1.1f%%', pctdistance=0.85, radius=1.6)
 
-        self.canvas = FigureCanvasTkAgg(self.fig)
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas.draw()
-        self.canvas.get_tk_widget().place(x=795, y=240, anchor=ctk.CENTER)
+        self.canvas.get_tk_widget().place(x=560, y=250, anchor=ctk.CENTER)
         self.update()  
 
     def update_labels(self):
-        self.youtube_time_label.configure(text = str(time_youtube) + " sec")
-        self.twitch_time_label.configure(text = str(time_twitch) + " sec")
+        self.youtube_time_label.configure(text = str(timedelta(seconds=time_youtube)))
+        self.twitch_time_label.configure(text = str(timedelta(seconds=time_youtube)) + " sec")
         self.vscode_time_label.configure(text = str(time_vscode) + " sec")
         self.mt5_time_label.configure(text = str(time_mt5) + " sec")
-        self.mteditor_time_label.configure(text = str(time_mt5) + " sec")
         self.mteditor_time_label.configure(text = str(time_mteditor) + " sec")
         self.discord_time_label.configure(text = str(time_discord) + " sec")
         self.spotify_time_label.configure(text = str(time_spotify) + " sec")
@@ -329,6 +357,7 @@ class PlotFrame(ctk.CTkFrame):
         self.lol_time_label.configure(text = str(time_lol) + " sec")
         self.rest_time_label.configure(text = str(time_rest) + " sec")
         self.total_time_label.configure(text= str(time_total) + " sec")
+        self.update()
 
     def check_if_date_exists(self, formated_date, data):
         if formated_date in data:
@@ -339,26 +368,25 @@ class PlotFrame(ctk.CTkFrame):
         else:
             print("Date does not exist")
 
-    def check_if_program_was_used(self, values, labels):
+    def check_if_program_was_used(self, values, labels, colors):
         updated_labels = []
         updated_values = []
+        updated_colors = []
 
         for i, value in enumerate(values):
             if (value > 0):
                 updated_values.append(value)
                 updated_labels.append(labels[i])
+                updated_colors.append(colors[i])
 
         updated_values = np.array(updated_values)
 
-        return updated_labels, updated_values
-
-class ProgramAndTimeTable(ctk.CTkFrame):
-    def __init__(self, master):
-        super().__init__(master)
+        return updated_labels, updated_values, updated_colors
 
 
 
 if __name__ == "__main__":
+    
     app = App()
     atexit.register(app.stop_threads)
     app.mainloop()
