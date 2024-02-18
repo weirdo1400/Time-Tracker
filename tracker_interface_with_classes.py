@@ -1,36 +1,31 @@
 import customtkinter as ctk
-import tkinter as tk
 from tkcalendar import Calendar
+from PIL import ImageTk
 import threading
 import atexit
 from datetime import timedelta
 
-tk.messagebox
 import json
 
-
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import numpy as np
 
 from tracker_with_threading import Tracker
 
-global time_youtube
 helper_array = []
 formated_data = {}
 output_file = "formated_data.json"	
 global data
 date = ""
 input_file = "data.json"		
-global extProc
-extProc = None
-
-
 class App(ctk.CTk):
     def __init__(self):
         super().__init__(fg_color="#D3D3D3")
         self.title("Time Tracker")
+        self.iconpath = ImageTk.PhotoImage(file="C:\Coding\Time_Tracker\icon\watch.png")
+        self.wm_iconbitmap()
+        self.iconphoto(False, self.iconpath)
         global thread_1, t
 
         self.app_width = 1080
@@ -68,7 +63,7 @@ class App(ctk.CTk):
 
     def stop_threads(self):
         global thread_1, t
-        if thread_1.is_alive():
+        if thread_1 and thread_1.is_alive():
             t.stop()
             thread_1.join(timeout=3)
             print("Joined thread")
@@ -80,9 +75,11 @@ class SideMenuFrame(ctk.CTkFrame):
         super().__init__(master, width=width, height=height, corner_radius=0, fg_color="#fbd1a2")
         global thread_1, t
 
-        self.start_button = ctk.CTkButton(self, text="START", command=self.start_button_callback, fg_color="#7dcfb6", width=160, height=40)
+        self.title_font = ctk.CTkFont(family='Helvetica', size=20, weight='bold')
+
+        self.start_button = ctk.CTkButton(self, text="START", command=self.start_button_callback, fg_color="#7dcfb6", width=160, height=40, font=self.title_font, text_color="#ffffff")
         self.start_button.place(x=(width/2), y=700, anchor=ctk.CENTER)
-        self.stop_button = ctk.CTkButton(self, text="STOP", command=self.stop_button_callback, fg_color="#f96d6d", width=160, height=40)
+        self.stop_button = ctk.CTkButton(self, text="STOP", command=self.stop_button_callback, fg_color="#f96d6d", width=160, height=40, font=self.title_font, text_color="#ffffff")
         self.stop_button.place(x=(width/2), y=750, anchor=ctk.CENTER)
 
     def start_button_callback(self):
@@ -103,7 +100,7 @@ class SideMenuFrame(ctk.CTkFrame):
 
     def stop_button_callback(self):
         global thread_1, t
-        if thread_1.is_alive():
+        if thread_1 and thread_1.is_alive():
             t.stop()
             thread_1.join(timeout=3)
             print("Joined thread")
@@ -113,43 +110,43 @@ class SideMenuFrame(ctk.CTkFrame):
 class OverviewFrame(ctk.CTkFrame):
     def __init__(self, master, width, height):
         super().__init__(master, width=width, height=height, corner_radius=10, fg_color="#ffffff")
+        self.key_exists = False
 
         self.colors = ['#f79256', '#fbd1a2', '#1d4e89', '#00b2ca', '#7dcfb6', '#DE576E', '#EDB1B0', '#7A71C9', '#831691', '#ACDE57']
 
-        self.table_font = ctk.CTkFont(family='Helvetica', size=15, weight='bold')
+        self.table_font = ctk.CTkFont(family='Helvetica', size=15)
+        self.title_font = ctk.CTkFont(family='Helvetica', size=20, weight='bold')
+        self.table_title_font = ctk.CTkFont(family='Helvetica', size=15, weight='bold')
 
         self.cal = Calendar(self, selectmode = 'day', date_pattern="yyyy-mm-dd", selectbackground="#fbd1a2")
         self.cal.place(x=150, y=115, anchor=ctk.CENTER)
 
-        self.get_date_button = ctk.CTkButton(self, text="Select Date", command=self.get_date, width=160, height=40, fg_color="#7dcfb6")
+        self.get_date_button = ctk.CTkButton(self, text="Select Date", command=self.get_date, width=160, height=40, fg_color="#7dcfb6", font=self.title_font, text_color="#ffffff")
         self.get_date_button.place(x=150, y=245, anchor=ctk.CENTER)
 
-        self.my_date = ctk.CTkLabel(self, text = "", font=self.table_font)
+        self.my_date = ctk.CTkLabel(self, text = "", font=self.title_font)
         self.my_date.place(x=560, y=30, anchor=ctk.CENTER)
-
-        
 
         self.create_lables()
 
-
     def create_lables(self):
         self.x_base = 360
-        self.x_dist = 100
+        self.x_dist = 200
         self.row_n = 1
         self.base_row = 420
         self.row_dist = 25
         self.color_1 = "#7dcfb6"
         self.color_2 = "#00b2ca"
-        self.height = 30
-        self.width = 300
+        self.height = 25
+        self.width = 200
         self.color_index = 0
         self.time_padx = 5
         self.program_padx = 5
         # Create all label for time and apps
-        self.program_title = ctk.CTkLabel(self, text="Programm", height=self.height, width=self.width, fg_color="#216760", text_color="#ffffff", anchor=ctk.W, padx=self.program_padx, font=self.table_font)
-        self.program_title.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
-        self.time_title = ctk.CTkLabel(self, text="Time", height=self.height, width=self.width, fg_color="#216760", text_color="#ffffff", anchor=ctk.E, padx=self.time_padx, font=self.table_font)
-        self.time_title.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.program_title = ctk.CTkLabel(self, text="Programm", height=self.height, width=self.width, fg_color="#216760", text_color="#ffffff", anchor=ctk.W, padx=self.program_padx, font=self.table_title_font)
+        self.program_title.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n-2)
+        self.time_title = ctk.CTkLabel(self, text="Time", height=self.height, width=self.width, fg_color="#216760", text_color="#ffffff", anchor=ctk.E, padx=3*self.time_padx, font=self.table_title_font)
+        self.time_title.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n-2)
         self.row_n += 1
 
         self.youtube_label = ctk.CTkLabel(self, text="Youtube", fg_color=self.colors[self.color_index], height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
@@ -222,14 +219,14 @@ class OverviewFrame(ctk.CTkFrame):
         self.row_n += 1
         self.color_index += 1
 
-        self.total_label = ctk.CTkLabel(self, text="Total", height=self.height, width=self.width, anchor=ctk.W, padx=self.program_padx, font=self.table_font)
-        self.total_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n)
-        self.total_time_label = ctk.CTkLabel(self, text="", height=self.height, width=self.width, anchor=ctk.E, padx=self.time_padx, font=self.table_font)
-        self.total_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n)
+        self.total_label = ctk.CTkLabel(self, text="Total", height=self.height, width=self.width, fg_color="#216760", text_color="#ffffff", anchor=ctk.W, padx=self.program_padx, font=self.table_title_font)
+        self.total_label.place(x=self.x_base, y=self.base_row+self.row_dist*self.row_n+2)
+        self.total_time_label = ctk.CTkLabel(self, text="", height=self.height, width=self.width, fg_color="#216760", text_color="#ffffff", anchor=ctk.E, padx=self.time_padx, font=self.table_title_font)
+        self.total_time_label.place(x=self.x_base+self.x_dist, y=self.base_row+self.row_dist*self.row_n+2)
 
     def get_date(self):
         # Grab the date
-        self.my_date.configure(text = self.cal.get_date())
+        
         global date
         date = self.cal.get_date()
         self.summarize_data(date, data)
@@ -268,46 +265,58 @@ class OverviewFrame(ctk.CTkFrame):
         time_discord = 0
         global time_total
         time_total = 0
-        for entry in data[formated_date]:
-            if entry[0].find("YouTube") != -1:
-                time_youtube += entry[1]
-            elif entry[0].find("Twitch") != -1:
-                time_twitch += entry[1]
-            elif entry[0].find("Visual Studio Code") != -1:
-                time_vscode += entry[1]
-            elif entry[0].find("MetaTrader 5") != -1:
-                time_mt5 += entry[1]
-            elif entry[0].find("ICMarketsSC") != -1:
-                time_mt5 += entry[1]
-            elif entry[0].find("MetaEditor") != -1:
-                time_mteditor += entry[1]
-            elif entry[0].find("Discord") != -1:
-                time_discord += entry[1]
-            elif entry[0].find("Spotify") != -1:
-                time_spotify += entry[1]
-            elif entry[0].find("League of Legends") != -1:
-                time_lol += entry[1]
-            elif entry[0].find("Google Chrome") != -1:
-                time_google += entry[1]
-            else:
-                time_rest += entry[1]
 
-            time_total += entry[1]
+        
 
-        helper_array.insert(0, ["YouTube", time_youtube])
-        helper_array.insert(1, ["Twitch", time_twitch])
-        helper_array.insert(2, ["Visual Studio Code", time_vscode])
-        helper_array.insert(3, ["MetaTrader 5", time_mt5])
-        helper_array.insert(4, ["MetaEditor", time_mteditor])
-        helper_array.insert(5, ["Discord", time_discord])
-        helper_array.insert(6, ["Spotify", time_spotify])
-        helper_array.insert(7, ["League of Legends", time_lol])
-        helper_array.insert(8, ["Google Chrome", time_google])
-        helper_array.insert(9, ["Rest", time_rest])
-        helper_array.insert(10, ["Total", time_total])
-        formated_data[formated_date] = helper_array
-        self.create_json_store_data(formated_date)
-        self.create_pie_chart()
+        if formated_date in data.keys():
+            print(f"Key '{formated_date}' exists.")
+            self.key_exists = True
+        else:
+            print(f"Key '{formated_date}' does not exist.")
+            self.key_exists = False
+
+
+        if self.key_exists:
+            for entry in data[formated_date]:
+                if entry[0].find("YouTube") != -1:
+                    time_youtube += entry[1]
+                elif entry[0].find("Twitch") != -1:
+                    time_twitch += entry[1]
+                elif entry[0].find("Visual Studio Code") != -1:
+                    time_vscode += entry[1]
+                elif entry[0].find("MetaTrader 5") != -1:
+                    time_mt5 += entry[1]
+                elif entry[0].find("ICMarketsSC") != -1:
+                    time_mt5 += entry[1]
+                elif entry[0].find("MetaEditor") != -1:
+                    time_mteditor += entry[1]
+                elif entry[0].find("Discord") != -1:
+                    time_discord += entry[1]
+                elif entry[0].find("Spotify") != -1:
+                    time_spotify += entry[1]
+                elif entry[0].find("League of Legends") != -1:
+                    time_lol += entry[1]
+                elif entry[0].find("Google Chrome") != -1:
+                    time_google += entry[1]
+                else:
+                    time_rest += entry[1]
+
+                time_total += entry[1]
+
+            helper_array.insert(0, ["YouTube", time_youtube])
+            helper_array.insert(1, ["Twitch", time_twitch])
+            helper_array.insert(2, ["Visual Studio Code", time_vscode])
+            helper_array.insert(3, ["MetaTrader 5", time_mt5])
+            helper_array.insert(4, ["MetaEditor", time_mteditor])
+            helper_array.insert(5, ["Discord", time_discord])
+            helper_array.insert(6, ["Spotify", time_spotify])
+            helper_array.insert(7, ["League of Legends", time_lol])
+            helper_array.insert(8, ["Google Chrome", time_google])
+            helper_array.insert(9, ["Rest", time_rest])
+            helper_array.insert(10, ["Total", time_total])
+            formated_data[formated_date] = helper_array
+            self.create_json_store_data(formated_date)
+            self.create_pie_chart()
         self.update_labels()
 
     def create_json_store_data(self, formated_date):
@@ -336,28 +345,29 @@ class OverviewFrame(ctk.CTkFrame):
         self.updated_pie_labels, self.updated_pie_chart_array, self.updated_colors = self.check_if_program_was_used(self.pie_chart_array, self.pie_labels, self.colors)
         
         self.fig = Figure(figsize=(3.1, 3.1), dpi=120, layout='constrained')
-        
-        
-        self.fig.add_subplot(111).pie(x=self.updated_pie_chart_array, colors=self.colors, autopct='%1.1f%%', pctdistance=0.85, radius=1.6)
-
+        self.fig.add_subplot(111).pie(x=self.updated_pie_chart_array, colors=self.updated_colors, autopct='%1.1f%%', pctdistance=0.85, radius=1.6)
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas.draw()
-        self.canvas.get_tk_widget().place(x=560, y=250, anchor=ctk.CENTER)
+        self.canvas.get_tk_widget().place(x=560, y=240, anchor=ctk.CENTER)
         self.update()  
 
     def update_labels(self):
-        self.youtube_time_label.configure(text = str(timedelta(seconds=time_youtube)))
-        self.twitch_time_label.configure(text = str(timedelta(seconds=time_youtube)) + " sec")
-        self.vscode_time_label.configure(text = str(time_vscode) + " sec")
-        self.mt5_time_label.configure(text = str(time_mt5) + " sec")
-        self.mteditor_time_label.configure(text = str(time_mteditor) + " sec")
-        self.discord_time_label.configure(text = str(time_discord) + " sec")
-        self.spotify_time_label.configure(text = str(time_spotify) + " sec")
-        self.google_time_label.configure(text = str(time_google) + " sec")
-        self.lol_time_label.configure(text = str(time_lol) + " sec")
-        self.rest_time_label.configure(text = str(time_rest) + " sec")
-        self.total_time_label.configure(text= str(time_total) + " sec")
-        self.update()
+        if self.key_exists:
+            self.youtube_time_label.configure(text = str(timedelta(seconds=time_youtube)))
+            self.twitch_time_label.configure(text = str(timedelta(seconds=time_twitch)))
+            self.vscode_time_label.configure(text = str(timedelta(seconds=time_vscode)))
+            self.mt5_time_label.configure(text = str(timedelta(seconds=time_mt5)))
+            self.mteditor_time_label.configure(text = str(timedelta(seconds=time_mteditor)))
+            self.discord_time_label.configure(text = str(timedelta(seconds=time_discord)))
+            self.spotify_time_label.configure(text = str(timedelta(seconds=time_spotify)))
+            self.google_time_label.configure(text = str(timedelta(seconds=time_google)))
+            self.lol_time_label.configure(text = str(timedelta(seconds=time_lol)))
+            self.rest_time_label.configure(text = str(timedelta(seconds=time_rest)))
+            self.total_time_label.configure(text= str(timedelta(seconds=time_total)))
+            self.my_date.configure(text = self.cal.get_date())
+        else:
+            self.my_date.configure(text = f"{str(self.cal.get_date())} does not exist")
+            
 
     def check_if_date_exists(self, formated_date, data):
         if formated_date in data:
