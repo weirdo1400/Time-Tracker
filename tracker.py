@@ -12,8 +12,7 @@ global time_start
 global open_window
 global json_file
 global running_tracker
-
-
+global not_existing
 class Tracker:
 	def __init__(self):
 		self.date_exists = False
@@ -23,7 +22,9 @@ class Tracker:
 		self.running_tracker = True
 		self.start = False
 		self.array = []
-
+		global test
+		
+		test = True
 
 	def calculate_time_and_store_in_list(self, not_existing, time_start, open_window):
 		time_end = dt.datetime.now()		
@@ -79,7 +80,7 @@ class Tracker:
 				time.sleep(2)
 		except KeyboardInterrupt:
 			self.calculate_time_and_store_in_list(not_existing, time_start, open_window)
-			self.safe_data(self.data)
+			self.safe_data(data=data)
 			print("Interrupted!")
 
 	def safe_data(self, data):

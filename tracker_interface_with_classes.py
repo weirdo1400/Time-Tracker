@@ -3,7 +3,7 @@ from tkcalendar import Calendar
 from PIL import ImageTk
 import threading
 import atexit
-from datetime import timedelta
+import datetime as dt
 
 import json
 
@@ -12,6 +12,8 @@ from matplotlib.figure import Figure
 import numpy as np
 
 from tracker_with_threading import Tracker
+global t
+t = Tracker() 
 
 helper_array = []
 formated_data = {}
@@ -111,6 +113,7 @@ class OverviewFrame(ctk.CTkFrame):
     def __init__(self, master, width, height):
         super().__init__(master, width=width, height=height, corner_radius=10, fg_color="#ffffff")
         self.key_exists = False
+        global t
 
         self.colors = ['#f79256', '#fbd1a2', '#1d4e89', '#00b2ca', '#7dcfb6', '#DE576E', '#EDB1B0', '#7A71C9', '#831691', '#ACDE57']
 
@@ -227,20 +230,27 @@ class OverviewFrame(ctk.CTkFrame):
     def get_date(self):
         # Grab the date
         
-        global date
+        global date, t, thread_1
         date = self.cal.get_date()
-        self.summarize_data(date, data)
-
-    def open_and_read_json(self):
+        
+        #t.calculate_time_and_store_in_list(t.not_existing, self.time_start, t.open_window)
+        #t.safe_data(data=data)
         try:
-            with open (input_file, "r") as json_file:
-                global data
-                data = json.load(json_file)
-                print("Existing JSON file:")
-                print(data)
-            print("File read")
+            if thread_1 and thread_1.is_alive():
+                print("THREAD")
+                t.calculate_time_and_store_in_list(t.not_existing, t.time_start, t.open_window)
+                t.safe_data(data)
+            else:
+                print(":NOTHREAD")
+                t.open_json_and_load_data(input_file)
+                t.calculate_time_and_store_in_list(t.not_existing, t.time_start, t.open_window)
+                t.safe_data(data)
         except:
-            print("File is empty or doesnt't exist")
+            print("smash or pass")
+            pass
+        #
+
+        self.summarize_data(date, data)
 
     def summarize_data(self, formated_date, data):
         global time_rest
@@ -266,15 +276,12 @@ class OverviewFrame(ctk.CTkFrame):
         global time_total
         time_total = 0
 
-        
-
         if formated_date in data.keys():
             print(f"Key '{formated_date}' exists.")
             self.key_exists = True
         else:
             print(f"Key '{formated_date}' does not exist.")
             self.key_exists = False
-
 
         if self.key_exists:
             for entry in data[formated_date]:
@@ -315,11 +322,12 @@ class OverviewFrame(ctk.CTkFrame):
             helper_array.insert(9, ["Rest", time_rest])
             helper_array.insert(10, ["Total", time_total])
             formated_data[formated_date] = helper_array
-            self.create_json_store_data(formated_date)
+            self.create_json_store_data()   
             self.create_pie_chart()
+
         self.update_labels()
 
-    def create_json_store_data(self, formated_date):
+    def create_json_store_data(self):
         try:
             with open (output_file, "w") as json_file:
                 json_string = json.dumps(formated_data, indent=2)
@@ -353,17 +361,17 @@ class OverviewFrame(ctk.CTkFrame):
 
     def update_labels(self):
         if self.key_exists:
-            self.youtube_time_label.configure(text = str(timedelta(seconds=time_youtube)))
-            self.twitch_time_label.configure(text = str(timedelta(seconds=time_twitch)))
-            self.vscode_time_label.configure(text = str(timedelta(seconds=time_vscode)))
-            self.mt5_time_label.configure(text = str(timedelta(seconds=time_mt5)))
-            self.mteditor_time_label.configure(text = str(timedelta(seconds=time_mteditor)))
-            self.discord_time_label.configure(text = str(timedelta(seconds=time_discord)))
-            self.spotify_time_label.configure(text = str(timedelta(seconds=time_spotify)))
-            self.google_time_label.configure(text = str(timedelta(seconds=time_google)))
-            self.lol_time_label.configure(text = str(timedelta(seconds=time_lol)))
-            self.rest_time_label.configure(text = str(timedelta(seconds=time_rest)))
-            self.total_time_label.configure(text= str(timedelta(seconds=time_total)))
+            self.youtube_time_label.configure(text = str(dt.timedelta(seconds=time_youtube)))
+            self.twitch_time_label.configure(text = str(dt.timedelta(seconds=time_twitch)))
+            self.vscode_time_label.configure(text = str(dt.timedelta(seconds=time_vscode)))
+            self.mt5_time_label.configure(text = str(dt.timedelta(seconds=time_mt5)))
+            self.mteditor_time_label.configure(text = str(dt.timedelta(seconds=time_mteditor)))
+            self.discord_time_label.configure(text = str(dt.timedelta(seconds=time_discord)))
+            self.spotify_time_label.configure(text = str(dt.timedelta(seconds=time_spotify)))
+            self.google_time_label.configure(text = str(dt.timedelta(seconds=time_google)))
+            self.lol_time_label.configure(text = str(dt.timedelta(seconds=time_lol)))
+            self.rest_time_label.configure(text = str(dt.timedelta(seconds=time_rest)))
+            self.total_time_label.configure(text= str(dt.timedelta(seconds=time_total)))
             self.my_date.configure(text = self.cal.get_date())
         else:
             self.my_date.configure(text = f"{str(self.cal.get_date())} does not exist")

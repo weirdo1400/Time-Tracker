@@ -24,12 +24,13 @@ class Tracker:
 		self.running_tracker = True
 		self.start = False
 		self.array = []
-
+		self.not_existing = True
 
 	def calculate_time_and_store_in_list(self, not_existing, time_start, open_window):
 		time_end = dt.datetime.now()		
 		timedelta = (time_end - time_start).seconds
-		print(str(open_window) + " has been open for " + str(timedelta))
+		#print(str(open_window) + " has been open for " + str(timedelta))
+		#print(self.array)
 		for p in self.array:
 			if open_window == p[0]:
 				p[1] += timedelta
@@ -40,7 +41,8 @@ class Tracker:
 			print("not opened yet")
 			self.array.insert(len(self.array), [open_window, timedelta])	
 			not_existing = False
-		print(self.array)
+		#print("calculate_time_and_store_in_list()")
+		#print(self.array)
 
 	def open_json_and_load_data(self, file):
 		date_today = dt.date.today()
@@ -48,30 +50,31 @@ class Tracker:
 			with open (file, "r") as json_file:
 				data = json.load(json_file)
 				print("Existing JSON file:")
-				print(data)
+				#print(data)
 			if str(date_today) in data:
 				date_exists = True
-				array = data[str(date_today)]
-				print("date exists")
+				self.array = data[str(date_today)]
+				#print("date exists")
 			else:
-				array = []
-			print("File read")
+				self.array = []
+				#print("date doesnt exist")
+			#print("File read")
 		except:
-			print("File is empty or doesnt't exist")
-			array = []
+			#print("File is empty or doesnt't exist")
+			self.array = []
 			data = {}
 
 		open_window = GetWindowText(GetForegroundWindow()) 
 		#print("Open window: " + open_window)
-		time_start = dt.datetime.now()
-		return time_start, array, data, open_window
+		self.time_start = dt.datetime.now()
+		return self.time_start, self.array, data, open_window
 
 	def get_current_app(self):
 		#print("here")
 		self.time_start, self.array, self.data, self.open_window = self.open_json_and_load_data(self.file)
 		
 		while self.running_tracker:
-			print("running trakcer: " + str(self.running_tracker))
+			#print("running trakcer: " + str(self.running_tracker))
 			not_existing = True
 			if self.open_window != GetWindowText(GetForegroundWindow()):
 				#print("Not same window")			
@@ -79,7 +82,7 @@ class Tracker:
 				self.time_start = dt.datetime.now()
 				self.open_window = GetWindowText(GetForegroundWindow())
 				#print("new open window")
-				print(GetWindowText(GetForegroundWindow()))
+				#print(GetWindowText(GetForegroundWindow()))
 			time.sleep(2)
 		if not self.running_tracker:
 			self.calculate_time_and_store_in_list(not_existing, self.time_start, self.open_window)
@@ -90,12 +93,14 @@ class Tracker:
 
 	def safe_data(self, data):
 		data[str(self.date_today)] = self.array
-		#print(data)
+		print("safe it")
+		print(data[str(self.date_today)])
 		try:
 			with open (self.file, "w+") as output:
 				json_string = json.dumps(data, indent=2)	
 				output.write(json_string)  
 				output.close()
+				print("file written")
 		except:
 			print("Error wrtiting to file")
 	
